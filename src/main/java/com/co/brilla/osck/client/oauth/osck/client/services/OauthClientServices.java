@@ -8,8 +8,11 @@ import com.co.brilla.osck.client.oauth.osck.client.interfaces.IOauthClient;
 import com.co.brilla.osck.client.oauth.osck.client.interfaces.IServicesCallOauthToken;
 import com.co.brilla.osck.client.oauth.osck.client.interfaces.IServicesCallOsckClient;
 import com.co.brilla.osck.client.oauth.osck.client.util.ClientOauthUtil;
+import com.co.brilla.osck.client.oauth.osck.client.util.ConstantsCode;
 import com.co.brilla.osck.client.oauth.osck.client.util.MapsDto;
-import com.google.gson.Gson;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +27,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.util.Map;
 
+
 @Service
+@Slf4j
 public class OauthClientServices implements IOauthClient {
 
 
@@ -36,6 +41,8 @@ public class OauthClientServices implements IOauthClient {
 
     @Autowired
     private ClientOauthUtil clientOauthUtil;
+
+
 
 
 
@@ -53,59 +60,67 @@ public class OauthClientServices implements IOauthClient {
             Response<OauthResponseDto> response = call.execute();
 
             if (response.isSuccessful()) {
-                System.out.println("response retrofit " + response.body());
                 return new ResponseEntity<>(response.body().getAccess_token(),HttpStatus.OK);
             } else {
-                System.out.println("error");
+                log.info("Error al consumir el servicio getAccesToken");
                 new ResponseEntity<>("error al consumir el servicio", HttpStatus.BAD_REQUEST);
             }
 
         }catch (Exception e) {
-            System.out.println("Error Call getParam()  + " + e);
+            log.error("Error Call getAccessToken()  + " + e.getMessage());
             return new ResponseEntity<>("error al consumir el servicio", HttpStatus.BAD_REQUEST);
         }
-
         return null;
     }
 
     @Override
     public ResponseEntity<?> callOsckPackage(OsckClientRequestDto osckClientRequestDto) {
-        Object xmlObject = this.creatXmlObject(osckClientRequestDto);
-        System.out.println(xmlObject.getClass());
-        ModelMapper modelMapper = new ModelMapper();
-        Object map = modelMapper.map(osckClientRequestDto.getBodyRequestPackage(),xmlObject.getClass());
-try {
-    Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(OSCK_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build();
-    IServicesCallOsckClient iServicesCallOsckClient = retrofit.create(IServicesCallOsckClient.class);
-    OsckCallPackageDto osckCallPackageDto = new OsckCallPackageDto();
-    ParametersDto parametersDto []= new ParametersDto[1];
-    parametersDto[0]=new ParametersDto("iclData","<XML><DESCRIPCION>PRUEBA 2</DESCRIPCION><ESTADO>Y</ESTADO></XML>");
+        try {
+            String xmlObject = this.creatXmlObject(osckClientRequestDto);
+            OsckCallPackageDto osckCallPackageDto = this.createOsckCallPackageDto(osckClientRequestDto, xmlObject);
 
-    osckCallPackageDto.setApiName(osckClientRequestDto.getApiName());
-    osckCallPackageDto.setParameters(parametersDto);
-    System.out.println(osckClientRequestDto.getApiKey());
-    Call<OauthResponseDto> call = iServicesCallOsckClient.SetPackage(osckClientRequestDto.getApiKey(), osckCallPackageDto);
-    Response<OauthResponseDto> response = call.execute();
-   System.out.println(response.message());
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl(OSCK_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+            IServicesCallOsckClient iServicesCallOsckClient = retrofit.create(IServicesCallOsckClient.class);
 
-}catch(Exception e){
-    System.out.println("Error Call getParam()  + " + e);
-    return new ResponseEntity<>("error al consumir el servicio", HttpStatus.BAD_REQUEST);
-}
-        System.out.println(map);
-        return new ResponseEntity<>(map,HttpStatus.OK);
+
+            Call<OsckCallPackageDto> call = iServicesCallOsckClient.SetPackage(osckClientRequestDto.getApiKey(), osckCallPackageDto);
+            Response<OsckCallPackageDto> response = call.execute();
+
+            return new ResponseEntity<>(response,HttpStatus.OK);
+
+        }catch(Exception e){
+            log.error("Error Call callOsckPackage()  + " + e.getMessage());
+            return new ResponseEntity<>("error al consumir el servicio", HttpStatus.BAD_REQUEST);
+        }
     }
 
-    public Object creatXmlObject(OsckClientRequestDto objectDto){
+    public String creatXmlObject(OsckClientRequestDto objectDto) throws JsonProcessingException {
         Map<String,Object> mapsDto = MapsDto.maps();
         ModelMapper modelMapper = new ModelMapper();
 
         Object getMap = mapsDto.get(objectDto.getApiName());
         Object map = modelMapper.map(objectDto.getBodyRequestPackage(),getMap.getClass());
 
-        return mapsDto.get(objectDto.getApiName());
+        XmlMapper xmlMapper = new XmlMapper();
+
+        String xml = xmlMapper.writeValueAsString(map);
+
+        xml = xml.replace(map.getClass().getSimpleName(), ConstantsCode.XML);
+
+        return xml;
+    }
+
+    public OsckCallPackageDto createOsckCallPackageDto(OsckClientRequestDto osckClientRequestDto, String xml){
+        OsckCallPackageDto osckCallPackageDtoResponse = new OsckCallPackageDto();
+        ParametersDto parametersDto []= new ParametersDto[1];
+        parametersDto[0]=new ParametersDto(ConstantsCode.ICLDATA,xml);
+
+        osckCallPackageDtoResponse.setApiName(osckClientRequestDto.getApiName());
+        osckCallPackageDtoResponse.setParameters(parametersDto);
+
+        return osckCallPackageDtoResponse;
     }
 }

@@ -9,7 +9,7 @@ public class MapsDto {
 
     public static Map<String,Object> maps(){
         Map<String, Object> mapObject = new HashMap<String, Object>();
-        mapObject.put("PE_PREGISTRALINEA", new PeRegitraLineaDto());
+        mapObject.put(ConstantsCode.PEPREGISTRALINEA, new PeRegitraLineaDto());
         return mapObject;
     }
 }

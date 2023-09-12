@@ -8,6 +8,6 @@ import java.util.Base64;
 public class ClientOauthUtil {
 
     public String generateAuthorizationCode(String clientId, String clientSecret){
-       return "Basic " + Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
+       return ConstantsCode.BASIC +" " + Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
     }
 }

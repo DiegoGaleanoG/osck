@@ -6,8 +6,8 @@ import lombok.ToString;
 @Data
 @ToString
 public class ParametersDto {
-    private String parameterName = "iclData";
-    private String parameterValue = "<XML><DESCRIPCION>PRUEBA 2</DESCRIPCION><ESTADO>Y</ESTADO></XML>";
+    private String parameterName;
+    private String parameterValue;
 
     public ParametersDto(String iclData, String s) {
         this.parameterName=iclData;
