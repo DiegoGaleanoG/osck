@@ -1,4 +1,4 @@
-package com.co.brilla.osck.client.oauth.osck.client.dto;
+package com.co.brilla.osck.client.oauth.osck.client.dto.pregistra;
 
 import lombok.Data;
 import lombok.ToString;

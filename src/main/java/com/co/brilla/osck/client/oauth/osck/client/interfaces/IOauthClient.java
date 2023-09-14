@@ -1,6 +1,6 @@
 package com.co.brilla.osck.client.oauth.osck.client.interfaces;
 
-import com.co.brilla.osck.client.oauth.osck.client.dto.OsckClientRequestDto;
+import com.co.brilla.osck.client.oauth.osck.client.dto.osck.OsckClientRequestDto;
 import org.springframework.http.ResponseEntity;
 
 public interface IOauthClient {

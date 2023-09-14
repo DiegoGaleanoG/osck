@@ -1,7 +1,7 @@
 package com.co.brilla.osck.client.oauth.osck.client.controller;
 
-import com.co.brilla.osck.client.oauth.osck.client.dto.OauthClientRequestDto;
-import com.co.brilla.osck.client.oauth.osck.client.dto.OsckClientRequestDto;
+import com.co.brilla.osck.client.oauth.osck.client.dto.Oauth.OauthClientRequestDto;
+import com.co.brilla.osck.client.oauth.osck.client.dto.osck.OsckClientRequestDto;
 import com.co.brilla.osck.client.oauth.osck.client.interfaces.IOauthClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

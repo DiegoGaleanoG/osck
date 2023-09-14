@@ -1,9 +1,9 @@
 package com.co.brilla.osck.client.oauth.osck.client.services;
 
-import com.co.brilla.osck.client.oauth.osck.client.dto.OauthResponseDto;
-import com.co.brilla.osck.client.oauth.osck.client.dto.OsckCallPackageDto;
-import com.co.brilla.osck.client.oauth.osck.client.dto.OsckClientRequestDto;
-import com.co.brilla.osck.client.oauth.osck.client.dto.ParametersDto;
+import com.co.brilla.osck.client.oauth.osck.client.dto.Oauth.OauthResponseDto;
+import com.co.brilla.osck.client.oauth.osck.client.dto.osck.OsckCallPackageDto;
+import com.co.brilla.osck.client.oauth.osck.client.dto.osck.OsckClientRequestDto;
+import com.co.brilla.osck.client.oauth.osck.client.dto.osck.ParametersDto;
 import com.co.brilla.osck.client.oauth.osck.client.interfaces.IOauthClient;
 import com.co.brilla.osck.client.oauth.osck.client.interfaces.IServicesCallOauthToken;
 import com.co.brilla.osck.client.oauth.osck.client.interfaces.IServicesCallOsckClient;
@@ -12,6 +12,7 @@ import com.co.brilla.osck.client.oauth.osck.client.util.ConstantsCode;
 import com.co.brilla.osck.client.oauth.osck.client.util.MapsDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,18 +60,22 @@ public class OauthClientServices implements IOauthClient {
             Call<OauthResponseDto> call = serviceCallEnrollmentApi.getTokenOauht(authorization,grantType,scope);
             Response<OauthResponseDto> response = call.execute();
 
+
+
             if (response.isSuccessful()) {
-                return new ResponseEntity<>(response.body().getAccess_token(),HttpStatus.OK);
+                JsonObject jsonMessage = new JsonObject();
+                jsonMessage.addProperty("AccessToken", response.body().getAccess_token());
+                log.info("consumo exitoso retorna"+ jsonMessage);
+                return new ResponseEntity<>(jsonMessage.toString(),HttpStatus.OK);
             } else {
                 log.info("Error al consumir el servicio getAccesToken");
-                new ResponseEntity<>("error al consumir el servicio", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(response.body(), HttpStatus.UNAUTHORIZED);
             }
 
         }catch (Exception e) {
             log.error("Error Call getAccessToken()  + " + e.getMessage());
             return new ResponseEntity<>("error al consumir el servicio", HttpStatus.BAD_REQUEST);
         }
-        return null;
     }
 
     @Override
@@ -89,7 +94,7 @@ public class OauthClientServices implements IOauthClient {
             Call<OsckCallPackageDto> call = iServicesCallOsckClient.SetPackage(osckClientRequestDto.getApiKey(), osckCallPackageDto);
             Response<OsckCallPackageDto> response = call.execute();
 
-            return new ResponseEntity<>(response,HttpStatus.OK);
+            return new ResponseEntity<>(response.body(),HttpStatus.OK);
 
         }catch(Exception e){
             log.error("Error Call callOsckPackage()  + " + e.getMessage());
